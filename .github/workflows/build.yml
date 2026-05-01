@@ -1,41 +1,71 @@
-name: Build Zygisk Menu
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+name: Build Zygisk Module
 
 on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
 
-      - name: Set up Java
+      - name: Set up JDK 11 (Gradle)
         uses: actions/setup-java@v4
+        id: java11
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Set up JDK 17 (sdkmanager)
+        uses: actions/setup-java@v4
+        id: java17
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x ./gradlew
+      - name: Setup NDK r22b
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r22b
+          local-cache: true
 
-      - name: Install Missing CMake 3.18.1
-        run: echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "cmake;3.18.1"
+      - name: Install SDK packages (JDK 17)
+        env:
+          JAVA_HOME: ${{ steps.java17.outputs.path }}
+        run: |
+          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
+          if [ ! -d "$ANDROID_SDK_ROOT" ]; then
+            export ANDROID_SDK_ROOT=$HOME/android-sdk
+            mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+            cd $ANDROID_SDK_ROOT/cmdline-tools
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q commandlinetools-linux-11076708_latest.zip
+            mv cmdline-tools latest 2>/dev/null || true
+          fi
+          
+          SDKMANAGER=$(find $ANDROID_SDK_ROOT -name sdkmanager -type f 2>/dev/null | head -1)
+          echo "sdkmanager: $SDKMANAGER"
+          java -version
+          yes | $SDKMANAGER --licenses || true
+          $SDKMANAGER --install "platforms;android-30" "build-tools;30.0.3"
 
-      - name: Build Module
-        run: ./gradlew assembleRelease
+      - name: Configure & Build (JDK 11)
+        env:
+          JAVA_HOME: ${{ steps.java11.outputs.path }}
+        run: |
+          echo "sdk.dir=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" > local.properties
+          echo "ndk.dir=$ANDROID_NDK_HOME" >> local.properties
+          chmod +x gradlew
+          java -version
+          ./gradlew :module:assembleRelease
 
-      - name: Upload Module zip
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Zygisk-Mod-Menu
-          path: |
-            out/*.zip
-            module/build/outputs/**/*.zip
-            app/build/outputs/**/*.apk
+          name: thespikerm-zygisk
+          path: out/*.zip
