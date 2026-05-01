@@ -72,7 +72,8 @@ afterEvaluate {
                     def dstPath = Paths.get("$magiskDir/zygisk/${f.path}.so")
                     println("Log: src path: $srcPath")
                     println("Log: dst path: $dstPath")
-                    Files.move(srcPath, dstPath)
+                    Files.createDirectories(dstPath.parent)
+                    Files.move(srcPath, dstPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
                 }
                 sleep(1000);
                 println("Deleting: $magiskDir/lib");
