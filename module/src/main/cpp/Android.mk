@@ -10,7 +10,7 @@ LOCAL_C_INCLUDES += $(MAIN_LOCAL_PATH)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := modmenu
+LOCAL_MODULE    := thespikerm
 
 # Code optimization
 LOCAL_CFLAGS := -Wno-error=format-security -fvisibility=hidden -ffunction-sections -fdata-sections -w
