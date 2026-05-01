@@ -1,9 +1,9 @@
 ext {
-    moduleLibraryName = "modmenu"
-    magiskModuleId = "imgui_modmenu"
-    moduleName = "ImGui Mod Menu"
+    moduleLibraryName = "thespikerm"
+    magiskModuleId = "thespikerm"
+    moduleName = "The Spike Mod Menu"
     moduleAuthor = "Reveny"
-    moduleDescription = "github.com/reveny"
+    moduleDescription = "Sara + WhiteSpike patch"
     moduleVersion = "v1.0.0"
     moduleVersionCode = 1
 }
