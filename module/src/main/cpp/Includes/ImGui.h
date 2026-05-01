@@ -144,15 +144,20 @@ void internalDrawMenu(int width, int height) {
     glClearColor(0.0, 0.0, 0, 0.0);
 }
 
+static int frameCount = 0;
 EGLBoolean swapbuffers_hook(EGLDisplay dpy, EGLSurface surf) {
+    frameCount++;
+    if (frameCount < 60) return o_swapbuffers(dpy, surf);
+
     EGLint w, h;
-    eglQuerySurface(dpy, surf, EGL_WIDTH, &w);
-    eglQuerySurface(dpy, surf, EGL_HEIGHT, &h);
+    if (!eglQuerySurface(dpy, surf, EGL_WIDTH, &w) || !eglQuerySurface(dpy, surf, EGL_HEIGHT, &h)) {
+        return o_swapbuffers(dpy, surf);
+    }
     glWidth = w;
     glHeight = h;
 
     setupMenu();
-    internalDrawMenu(w, h);
+    if (isInitialized) internalDrawMenu(w, h);
 
     return o_swapbuffers(dpy, surf);
 }
