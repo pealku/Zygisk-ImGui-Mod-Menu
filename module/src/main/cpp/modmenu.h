@@ -5,13 +5,11 @@
 
 #include <jni.h>
 #include <sys/system_properties.h>
+#include <unistd.h>
 
-#include "KittyMemory/MemoryPatch.h"
-#include "Includes/Dobby/dobby.h"
 #include "Includes/Utils.h"
 #include "Includes/Logger.h"
 #include "Includes/obfuscate.h"
-#include "sara_whitespike.h"
 
 static int enable_hack;
 static char *game_data_dir = nullptr;
@@ -41,32 +39,8 @@ int isGame(JNIEnv *env, jstring appDataDir) {
 }
 
 void *hack_thread(void *) {
-    LOGI(OBFUSCATE("hack thread: %d"), gettid());
-
-    do {
-        LOGI(OBFUSCATE("Waiting for libyoyo.so..."));
-        sleep(2);
-    } while (!isLibraryLoaded(OBFUSCATE("libyoyo.so")));
-
-    uintptr_t base = getBaseAddress(OBFUSCATE("libyoyo.so"));
-    LOGI(OBFUSCATE("libyoyo.so base: 0x%lx"), base);
-
-    if (!base) {
-        LOGE(OBFUSCATE("Failed to get libyoyo.so base"));
-        return nullptr;
-    }
-
-    lib_info info = find_library("libyoyo.so");
-    LOGI(OBFUSCATE("libyoyo.so size: 0x%lx"), (unsigned long)info.size);
-
-    bool ok = sara_find_and_patch(base, info.size);
-    if (ok) {
-        LOGI(OBFUSCATE("SpikerSara found at 0x%lx"), g_saraCtx.funcAddr);
-        sara_apply();
-        LOGI(OBFUSCATE("WhiteSpike AUTO-APPLIED to Sara!"));
-    } else {
-        LOGE(OBFUSCATE("SpikerSara NOT found - wrong game version?"));
-    }
-
+    LOGI(OBFUSCATE("hack_thread running, pid=%d"), getpid());
+    sleep(5);
+    LOGI(OBFUSCATE("hack_thread done"));
     return nullptr;
 }
